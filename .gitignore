@@ -1,0 +1,2 @@
+# Build inputs, not artifacts. `npm install` restores them; `npm run chunks` reads them.
+node_modules/

@@ -1,0 +1,84 @@
+// Barcode@1 — the BarcodeScanner control kit (`using Osysharp.BarcodeScanner;`).
+//
+// A live scanner built on the public foreign-control ABI, with a native decoder: ZXing (zxing-wasm), the C++ library
+// behind most QR readers, compiled to a 1.07 MB `.wasm` module. The platform serves that module from its own origin,
+// pins it by content address, and hands it to the shim through the same `chunks { }` mechanism a JavaScript chunk
+// uses. A `.wasm` is an ordinary control asset with an ordinary MIME type, and `host.chunkUrl("Wasm")` is an ordinary
+// same-origin URL.
+//
+// A browser refuses to COMPILE WebAssembly under a content-security policy of `script-src 'self'` alone, so app pages
+// are served with `'wasm-unsafe-eval'` as well. That is the narrow token that permits compiling WebAssembly and
+// nothing else (it is not `'unsafe-eval'` — no string ever becomes JavaScript). `scripts/verify.mjs` runs the scanner
+// in a real Chromium with and without it.
+//
+// The kit ships its glue and its module as two chunks, so a page that never scans downloads neither.
+
+// The kit namespace — its public types enter scope only via `using Osysharp.BarcodeScanner;`.
+namespace Osysharp.BarcodeScanner;
+
+/// A live barcode and QR SCANNER: it opens the camera, watches the picture for a code, and raises `scanned` with
+/// what the code says. Everything about reading the symbol — the camera, the frame loop, the decoder — is inside;
+/// the app supplies a box to draw in and an action to run when something is read.
+/// It is not in `Osysharp.Ui` and not in scope by default — add `use Osysharp.BarcodeScanner@1;` to app.osy, then
+/// `using Osysharp.BarcodeScanner;` in the file that calls it.
+/// e.g. `BarcodeScanner(scanned: Found, formats: qr)` inside a box that has a height
+control BarcodeScanner {
+  contractVersion "1.1"
+  participation headless
+  // The viewfinder takes the box the app gives it — the app decides how big a scanner is, never the scanner.
+  sizing fill
+  props {
+    // A scanner that cannot be turned off is a camera that is always on. The page decides: `active: false` releases
+    // the camera and stops the loop, and the browser's recording indicator goes out — which is the only signal a
+    // person has that they are not being watched. True by default, because a scanner you had to switch on twice
+    // (mount it, then arm it) is the wrong default for a control that is on screen because someone chose to scan.
+    bool active = true;
+    // Which symbologies to look for. Narrowing is not only about correctness — ZXing spends its time proportional to
+    // how many families it must try, so `"qr"` on a phone is materially faster than `"any"`.
+    //   any    — every format the decoder knows
+    //   qr     — QR and Micro QR
+    //   linear — the retail/logistics 1-D family (EAN, UPC, Code 39/93/128, ITF, Codabar, DataBar)
+    [Values(any, qr, linear)] string formats = "any";
+    // Which camera. `back` is the default because a scanner is pointed AT something; the selfie camera is the wrong
+    // one for every scanning task and is what a browser hands you if nobody says otherwise. On a laptop with one
+    // camera this is ignored by the browser, which is correct — a preference, not a demand.
+    [Values(back, front)] string facing = "back";
+    // How often a frame is decoded, in milliseconds. Not a frame rate: decoding is synchronous work on the main
+    // thread, and asking sixty times a second would make the page stutter without reading anything a person could
+    // not have held still for. 250ms is four looks a second, which is faster than a hand can move a label into view.
+    int intervalMs = 250;
+    // Repeat suppression. A code held in front of the camera is read on EVERY pass — so without this, one label
+    // produces four `scanned` events a second for as long as it is in shot, and an app that adds a row per scan gets
+    // forty of them. The same text is reported once and then suppressed for this long.
+    // Set it to 0 for an app that genuinely wants every read (a counter, a diagnostic).
+    int repeatAfterMs = 2000;
+  }
+  events {
+    /// A code was read. `text` is what it says; `format` is the symbology, as ZXing names it (`QRCode`, `EAN-13`, …).
+    scanned(string text, string format);
+    /// The scanner cannot run, and this says why in words meant for a person: no camera, permission refused, the
+    /// decoder failed to load. It is raised ONCE per cause, not once per frame — a page that showed a toast per
+    /// failure would otherwise show four a second.
+    failed(string reason);
+  }
+  // Two assets, neither of which a page that never scans pays for. `Core` is the Emscripten glue (37 KB); `Wasm` is
+  // the ZXing decoder itself (1.07 MB). They are SEPARATE chunks rather than one inlined module because the glue
+  // decides at run time where its module lives — see the shim's `locateFile` override, which points it at the
+  // `Wasm` chunk.
+  chunks { Core; Wasm; }
+  // What this scanner reports about itself, for an app's tests — facts the screen does not carry.
+  //
+  // A viewfinder is pixels of whatever the camera happens to see, and a scan is an EVENT that has already gone by.
+  // So a test that could only look at the page could assert neither "the decoder is loaded and the camera is live"
+  // nor "this is the last thing it read" — only what the APP chose to render about them.
+  probe {
+    /// The camera is open and the loop is running.
+    bool scanning;
+    /// How many codes have been read since mount (including repeats of the same text).
+    int scans;
+    /// The text of the most recent read, or nothing if there has not been one.
+    string? last;
+    /// Why the scanner is not working, or nothing when it is. The same words `failed` carried.
+    string? failure;
+  }
+}

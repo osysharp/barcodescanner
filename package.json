@@ -1,0 +1,16 @@
+{
+  "name": "osy-kit-barcode",
+  "private": true,
+  "description": "Build deps for the Barcode control kit's shim. `osy control build kits/barcode-scanner` prefers this directory's own node_modules/.bin/esbuild.",
+  "devDependencies": {
+    "esbuild": "^0.28.1",
+    "playwright": "^1.61.1",
+    "typescript": "^5.9.3",
+    "zxing-wasm": "^3.1.3"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "chunks": "node scripts/build-chunks.mjs",
+    "verify": "node scripts/verify.mjs"
+  }
+}

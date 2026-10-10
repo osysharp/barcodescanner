@@ -1,0 +1,29 @@
+{
+  "platform": {
+    "version": "0.9.0"
+  },
+  "entries": [],
+  "controls": [
+    {
+      "name": "BarcodeScanner",
+      "hash": "5e2525212763c50ac982ac979a11d4be81629ad62d98a2e20b92481f12b13d8e",
+      "file": "scan.js",
+      "contentType": "text/javascript",
+      "source": "scan.ts",
+      "chunks": [
+        {
+          "name": "Core",
+          "hash": "41a2da0ceb9713eef8eb46c5e5ada133e85562ecd17c4f751032ed221709ce16",
+          "file": "zxing-core.js",
+          "contentType": "text/javascript"
+        },
+        {
+          "name": "Wasm",
+          "hash": "2ebda08a93eea3efcd8399cda6b276e6a0b1de4fec60b4d8988a047de4c6d1ba",
+          "file": "zxing-reader.wasm",
+          "contentType": "application/wasm"
+        }
+      ]
+    }
+  ]
+}
