@@ -4,8 +4,8 @@
 // the kit's own `osyrin.lock` like every other asset. A package archive is a container of bytes, and nothing in the
 // format cares what a member holds.
 package Osysharp.BarcodeScanner {
-  version "1.0.2";
-  minPlatform "0.9.0";
+  version "1.1.0";
+  minPlatform "0.14.0";
   contract    "1.1";
   summary     "a live barcode + QR scanner: it owns the camera, decoding with ZXing.";
 
