@@ -19,14 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-Third-party components
-----------------------
-
-This kit vendors two built artefacts, pinned by content address in `osyrin.lock`.
-They are NOT covered by the licence above and remain under their own terms:
-
-  zxing-cpp (ZXing)   Apache-2.0
-  zxing-wasm          MIT

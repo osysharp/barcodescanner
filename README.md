@@ -122,9 +122,67 @@ decode on a device that fell behind, and then a third.
 **`failed` is raised once per cause.** The loop runs four times a second and a dead camera fails on every pass; an
 unguarded emit is four toasts a second for as long as the page is open.
 
+## Examples
+
+Taken from this package's own tests, which compile and run on every release, and from its reference page, whose examples are compiled when the site is built.
+
+```osy
+// ⚠ This example DECLARES the control inline, because a documentation example compiles on its own with no manifest
+// to carry a `use`. In your app you write `use Osysharp.BarcodeScanner@1;` instead and delete this block — the declaration
+// arrives with the kit. What follows is `scan.osy`, trimmed to what this page uses.
+control BarcodeScanner {
+  contractVersion "1.1"
+  participation headless
+  sizing fill
+  props {
+    bool active = true;
+    [Values(any, qr, linear)] string formats = "any";
+    [Values(back, front)] string facing = "back";
+    int intervalMs = 250;
+    int repeatAfterMs = 2000;
+  }
+  events {
+    scanned(string text, string format);
+    failed(string reason);
+  }
+  chunks { Core; Wasm; }
+  probe { bool scanning; int scans; string? last; string? failure; }
+}
+
+[Route("/scan")] [AllowAnonymous]
+component ScanPage() {
+  string code = "";
+  string problem = "";
+  bool armed = true;
+
+  action Found(string text, string format) { code = text; armed = false; }
+  action Broke(string reason) { problem = reason; }
+  action Again() { code = ""; problem = ""; armed = true; }
+
+  render {
+    Stack(gap: 3, p: 4) {
+      Stack(h: "16rem") {
+        BarcodeScanner(scanned: Found, failed: Broke, active: armed, formats: qr);
+      }
+      if (problem != "") { Text(problem); }
+      if (code != "") {
+        Text(code);
+        Button("Scan another", onPress: Again);
+      }
+    }
+  }
+}
+```
+
+From [the reference page](https://osysharp.com/reference/ui/barcode-kit/).
+
+## Learn more
+
+- [The Osysharp.BarcodeScanner reference](https://osysharp.com/reference/ui/barcode-kit/)
+- [Osysharp.BarcodeScanner in the package catalogue](https://osysharp.com/packages/#osysharp-barcodescanner)
+- [The Osy# reference](https://osysharp.com/reference/) — the language, the runtime and every kit
+- [`llms-full.txt`](https://osysharp.com/llms-full.txt) — the whole reference and specification as one Markdown file, for a coding agent
+
 ## Licence
 
-MIT &mdash; see [`LICENSE`](LICENSE). The `.osy` source is yours to read, copy, fork and ship.
-
-ZXing (zxing-cpp) is Apache-2.0; `zxing-wasm` is MIT. Both are vendored as compiled artifacts, pinned by content
-address in `osyrin.lock`, and keep their own terms.
+MIT — see [`LICENSE`](LICENSE). Third-party components keep their own terms: see [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).

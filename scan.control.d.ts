@@ -25,6 +25,9 @@ export interface TokenScope {
  *  props and reads/writes it here. Deliberately generic: it knows nothing about any control family. */
 export interface ControlDataScope {
   request(path: string, init?: { method?: string; body?: unknown }): Promise<ControlDataResponse>;
+  /** "Your data moved": the page's Undo or Redo rolled back (or re-applied) what you staged in its unit
+   *  of work on the server. Re-read what you show. Answers the unsubscribe; absent on a host with no page. */
+  onChanged?(listener: () => void): () => void;
 }
 
 export interface ControlDataResponse {
@@ -90,6 +93,12 @@ export interface BarcodeScannerHost {
    *  every layer. */
   emit(event: "scanned", text: string, format: string): void;
   emit(event: "failed", reason: string): void;
+
+  /** ONE user act: every event raised inside `act`, and until the promise it answers settles, is ONE undo
+   *  step on the page, named `label`. Events raised in one synchronous turn are one step already; this is
+   *  for a gesture that spans turns (a drag that emits as it goes). Optional, so on an older host:
+   *  `if (host.batch) host.batch(label, act); else act();` */
+  batch?(label: string, act: () => void | Promise<unknown>): void;
 
   /** The app's design tokens — this control is `headless`, so it renders through the app's theme. */
   tokens: TokenScope;
