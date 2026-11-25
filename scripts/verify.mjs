@@ -22,6 +22,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { prepareZXingModule, writeBarcode } from '../node_modules/zxing-wasm/dist/es/writer/index.js';
+import { launchChromium } from '../../../osy-client/scripts/lib/browser-launch.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const kit = join(here, '..');
@@ -159,7 +160,7 @@ async function run(label, wasmAllowed) {
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const port = server.address().port;
 
-  const browser = await chromium.launch({ args: ['--use-fake-ui-for-media-stream'] });
+  const browser = await launchChromium(chromium, { args: ['--use-fake-ui-for-media-stream'] });
   const context = await browser.newContext({ permissions: ['camera'] });
   const page = await context.newPage();
   const consoleErrors = [];
